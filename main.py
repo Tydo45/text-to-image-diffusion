@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
-
+# %%
 from tensorflow import keras
 from tensorflow.keras import layers, models
 
@@ -14,21 +11,17 @@ import imageio
 import matplotlib.pyplot as plt
 
 
-# In[2]:
-
-
+# %%
 batch_size = 64
 num_channels = 3
 num_classes = 131
 image_size = 100
 latent_dim = 128
 
-directory = "fruit/fruits-360_dataset/fruits-360/Training/"
+directory = "/home/weberbw/fruit/Training/"
 
 
-# In[3]:
-
-
+# %%
 dataset = tf.keras.utils.image_dataset_from_directory(
     directory,
     labels='inferred',
@@ -42,17 +35,17 @@ dataset = tf.keras.utils.image_dataset_from_directory(
 )
 
 
-# In[4]:
+# %%
+rescale = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
+normalized_dataset = dataset.map(lambda x, y: (rescale(x), y))
 
-
+# %%
 generator_in_channels = latent_dim + num_classes
 discriminator_in_channels = num_channels + num_classes
 print(generator_in_channels, discriminator_in_channels)
 
 
-# In[5]:
-
-
+# %%
 discriminator = keras.Sequential(
     [
         keras.layers.InputLayer((image_size, image_size, discriminator_in_channels)),
@@ -81,14 +74,12 @@ generator = keras.Sequential(
 )
 
 
-# In[6]:
-
-
+# %%
 discriminator.summary()
 generator.summary()
 
 
-# In[7]:
+# %%
 
 
 class ConditionalGAN(keras.Model):
@@ -109,6 +100,14 @@ class ConditionalGAN(keras.Model):
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.loss_fn = loss_fn
+
+    def save_model(self, path):
+        self.generator.save_weights(path + '_gen.h5')
+        self.discriminator.save_weights(path + '_disc.h5')
+
+    def load_model(self, path):
+        self.generator.load_weights(path + '_gen.h5')
+        self.discriminator.load_weights(path + '_disc.h5')
         
     def train_step(self, data):
         # Unpack the data.
@@ -185,22 +184,36 @@ class ConditionalGAN(keras.Model):
         }
 
 
-# In[8]:
+# %%
+class CustomModelCheckpoint(keras.callbacks.Callback):
+    def __init__(self, model, path):
+        super().__init__()
+        self.model = model
+        self.path = path
 
-
+    def on_epoch_end(self, epoch, logs=None):
+        self.model.save_model(self.path + f'_epoch_{epoch+1}')
+        
 cond_gan = ConditionalGAN(
     discriminator=discriminator, generator=generator, latent_dim=latent_dim
 )
+
 cond_gan.compile(
     d_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
     g_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
     loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-cond_gan.fit(dataset, epochs=20)
+model_save_callback = CustomModelCheckpoint(cond_gan, '/home/weberbw/model_weights/saved_weights')
 
 
-# In[ ]:
+# %%
+cond_gan.fit(dataset, epochs=20, callbacks=[model_save_callback])
+
+# %%
+cond_gan.load_model("/home/weberbw/model_weights/saved_weights_epoch_20")
+
+# %%
 
 
 # We first extract the trained generator from our Conditional GAN.
@@ -208,7 +221,7 @@ trained_gen = cond_gan.generator
 
 # Choose the number of intermediate images that would be generated in
 # between the interpolation + 2 (start and last images).
-num_interpolation = 9  # @param {type:"integer"}
+num_interpolation = 100  # @param {type:"integer"}
 
 # Sample noise for the interpolation.
 interpolation_noise = tf.random.normal(shape=(1, latent_dim))
@@ -242,17 +255,15 @@ end_class = 9  # @param {type:"slider", min:0, max:9, step:1}
 fake_images = interpolate_class(start_class, end_class)
 
 
-# In[ ]:
-
-
+# %%
 len(fake_images)
 
 
-# In[ ]:
-
-
-fake_images *= 255.0
-plt.imshow(fake_images[8])
+# %%
+# fake_images *= 255.0
+plt.imshow(fake_images[99])
 plt.axis('off')
 plt.show()
 
+
+# %%
