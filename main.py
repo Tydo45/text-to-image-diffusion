@@ -18,7 +18,7 @@ num_classes = 131
 image_size = 100
 latent_dim = 128
 
-directory = "/home/weberbw/fruit/Training/"
+directory = "fruit/fruits-360_dataset/fruits-360/Training/"
 
 
 # %%
@@ -204,14 +204,14 @@ cond_gan.compile(
     loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-model_save_callback = CustomModelCheckpoint(cond_gan, '/home/weberbw/model_weights/saved_weights')
+model_save_callback = CustomModelCheckpoint(cond_gan, 'model_weights/saved_weights')
 
 
 # %%
 cond_gan.fit(dataset, epochs=20, callbacks=[model_save_callback])
 
 # %%
-cond_gan.load_model("/home/weberbw/model_weights/saved_weights_epoch_20")
+cond_gan.load_model("model_weights/saved_weights_epoch_20")
 
 # %%
 

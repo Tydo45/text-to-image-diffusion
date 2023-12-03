@@ -1,12 +1,12 @@
 #!/bin/bash
 
-SBATCH --job-name='CGAN'
-SBATCH --partition=teaching
-SBATCH --nodes=1
-SBATCH --gpus=1
-SBATCH --cpus-per-gpu=10
-SBATCH --time=1-0:0
-time format: <days>-<hours>:<minutes>
+#SBATCH --job-name='CGAN'
+#SBATCH --partition=teaching
+#SBATCH --nodes=1
+#SBATCH --gpus=1
+#SBATCH --cpus-per-gpu=10
+#SBATCH --time=1-0:0
+# time format: <days>-<hours>:<minutes>
 
 # Path to container
 container="/data/containers/msoe-tensorflow-23.05-tf2-py3.sif"
